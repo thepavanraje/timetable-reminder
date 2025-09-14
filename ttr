@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4F46E5">
+    <title>PES Timetable Reminder</title>
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUEVTIFRpbWV0YWJsZSBSZW1pbmRlciIsInNob3J0X25hbWUiOiJUaW1ldGFibGUiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvciI6IiM0RjQ2RTUiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCNGJXeHVjejBpYUhSMGNEb3ZMM2QzZHk1M00zTXViM0puTHpJd01EQXZjM1puSWlCM2FXUjBhRDBpTVRJNElpQm9aV2xuYUhROUlqRXlPQ0krUEhKbFkzUWdlRDBpTkNJZ2VUMGlOQ0lnZDJsa2RHZzlJakV5TUNJZ2FHVnBaMmgwUFNJeE1qQWlJR1pwYkd3OUlpTTBSalEyUlRVaUx6NDhkR1Y0ZENCNFBTSTJOQ0lnZVQwaU5qUWlJSFJsZUhRdFlXNWphRzl5UFNKdGFXUmtiR1VpSUdacGJHdzlJaU5tWm1abVptWWlJR1p2Ym5RdGMybDZaVDBpTVRZaUlHWnZiblF0WldabVpXTjBQU0ppYjJ4a0lqNU9QQzkwWlhoMFBqeDNiMkpxWldOMElIZzlJak0xSWlCNVBTSTBNQ0lnZDJsa2RHZzlJalV3SWlCb1pXbG5hSFE5SWpVd0lpQm1hV3hzUFNJall6TXpOeUlnY25nOUlqSWlMejQ4TDNOMlp6ND0iLCJzaXplcyI6IjEyOHgxMjgiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XX0=">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        .current-time {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        
+        .main-content {
+            padding: 20px;
+        }
+        
+        .day-selector {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding: 5px 0;
+        }
+        
+        .day-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            background: #f3f4f6;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+        
+        .day-btn.active {
+            background: #4F46E5;
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .schedule-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .time-slot {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.3s;
+        }
+        
+        .time-slot:last-child {
+            border-bottom: none;
+        }
+        
+        .time-slot.current {
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        .time-slot.upcoming {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .time {
+            font-weight: bold;
+            font-size: 0.9rem;
+            min-width: 80px;
+            color: #4F46E5;
+        }
+        
+        .time-slot.current .time,
+        .time-slot.upcoming .time {
+            color: white;
+        }
+        
+        .subject {
+            flex: 1;
+            margin-left: 15px;
+        }
+        
+        .subject-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+        
+        .subject-code {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+        
+        .notification-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        
+        .notification-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .notification-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        
+        .install-prompt {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .install-btn {
+            background: white;
+            color: #4F46E5;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>📚 PES Timetable</h1>
+            <p>AI & ML Department - Semester B</p>
+            <div class="current-time" id="currentTime"></div>
+        </div>
+        
+        <div class="main-content">
+            <div class="day-selector">
+                <button class="day-btn" data-day="Monday">Mon</button>
+                <button class="day-btn" data-day="Tuesday">Tue</button>
+                <button class="day-btn" data-day="Wednesday">Wed</button>
+                <button class="day-btn" data-day="Thursday">Thu</button>
+                <button class="day-btn" data-day="Friday">Fri</button>
+                <button class="day-btn" data-day="Saturday">Sat</button>
+            </div>
+            
+            <button id="notificationBtn" class="notification-btn">
+                🔔 Enable Notifications
+            </button>
+            
+            <div id="status"></div>
+            
+            <div class="schedule-container" id="scheduleContainer">
+                <!-- Schedule will be populated by JavaScript -->
+            </div>
+            
+            <div id="installPrompt" class="install-prompt" style="display: none;">
+                <h3>📱 Install App</h3>
+                <p>Add this app to your home screen for easy access!</p>
+                <button id="installBtn" class="install-btn">Install Now</button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>PES Institute of Technology & Management</p>
+            <p>Stay organized with smart reminders! 🎓</p>
+        </div>
+    </div>
+
+    <script>
+        // Timetable data based on your schedule
+        const timetable = {
+            Monday: [
+                { time: '08:30-09:30', subject: 'Software Engineering', code: 'SE&PM', instructor: 'Mrs. Shilpa K' },
+                { time: '09:30-10:30', subject: 'Library', code: 'LIB', instructor: '' },
+                { time: '10:30-11:30', subject: 'Break', code: 'BREAK', instructor: '' },
+                { time: '11:30-12:30', subject: 'Research Methodology', code: 'RM&IPR', instructor: 'Mrs. Alekhya Mohammadi' },
+                { time: '12:30-01:30', subject: 'Theory of Computation', code: 'TC', instructor: 'Mrs. Tejaswini N D' },
+                { time: '01:30-02:30', subject: 'Lunch', code: 'LUNCH', instructor: '' },
+                { time: '02:30-03:30', subject: 'Placement', code: 'PLACE', instructor: '' },
+                { time: '03:30-04:30', subject: 'Mentoring', code: 'MENTOR', instructor: '' },
+                { time: '04:30-05:30', subject: 'National Service Scheme', code: 'NSS', instructor: 'Mrs. Tejaswini N D' }
+            ],
+            Tuesday: [
+                { time: '08:30-09:30', subject: 'Research Methodology', code: 'RM&IPR', instructor: 'Mrs. Alekhya Mohammadi' },
+                { time: '09:30-10:30', subject: 'Theory of Computation', code: 'TC', instructor: 'Mrs. Tejaswini N D' },
+                { time: '10:30-11:30', subject: 'Break', code: 'BREAK', instructor: '' },
+                { time: '11:30-12:30', subject: 'Data Visualization Lab', code: 'DV Lab(BI)', instructor: 'Mrs. Akhila C V' },
+                { time: '12:30-01:30', subject: 'Data Visualization Lab', code: 'DV Lab(BI)', instructor: 'Mrs. Akhila C V' },
+                { time: '01:30-02:30', subject: 'Lunch', code: 'LUNCH', instructor: '' },
+                { time: '02:30-03:30', subject: 'Placement', code: 'PLACE', instructor: '' },
+                { time: '03:30-04:30', subject: 'Mini Project', code: 'MINI PROJ', instructor: 'All Faculty' }
+            ],
+            Wednesday: [
+                { time: '08:30-09:30', subject: 'Computer Networks', code: 'CN', instructor: 'Mrs. Poornima B P & Mrs. Shilpa M I' },
+                { time: '09:30-10:30', subject: 'Business Intelligence Systems', code: 'BVS', instructor: 'Mrs. Tejaswini N D' },
+                { time: '10:30-11:30', subject: 'Break', code: 'BREAK', instructor: '' },
+                { time: '11:30-12:30', subject: 'Software Engineering', code: 'SE&PM', instructor: 'Mrs. Shilpa K' },
+                { time: '12:30-01:30', subject: 'Computer Vision', code: 'CV', instructor: 'Dr. Likevai Thomas' },
+                { time: '01:30-02:30', subject: 'Lunch', code: 'LUNCH', instructor: '' },
+                { time: '02:30-03:30', subject: 'Placement', code: 'PLACE', instructor: '' },
+                { time: '03:30-04:30', subject: 'Mini Project', code: 'MINI PROJ', instructor: 'All Faculty' }
+            ],
+            Thursday: [
+                { time: '08:30-09:30', subject: 'Research Methodology', code: 'RM&IPR', instructor: 'Mrs. Alekhya Mohammadi' },
+                { time: '09:30-10:30', subject: 'Computer Networks', code: 'CN', instructor: 'Mrs. Poornima B P & Mrs. Shilpa M I' },
+                { time: '10:30-11:30', subject: 'Break', code: 'BREAK', instructor: '' },
+                { time: '11:30-12:30', subject: 'Computer Vision', code: 'CV', instructor: 'Dr. Likevai Thomas' },
+                { time: '12:30-01:30', subject: 'Software Engineering', code: 'SE&PM', instructor: 'Mrs. Shilpa K' },
+                { time: '01:30-02:30', subject: 'Lunch', code: 'LUNCH', instructor: '' },
+                { time: '02:30-03:30', subject: 'Theory of Computation', code: 'TC', instructor: 'Mrs. Tejaswini N D' },
+                { time: '03:30-04:30', subject: 'National Service Scheme', code: 'NSS', instructor: 'Mrs. Tejaswini N D' },
+                { time: '04:30-05:30', subject: 'Remedial', code: 'REMEDIAL', instructor: '' }
+            ],
+            Friday: [
+                { time: '08:30-09:30', subject: 'Theory of Computation', code: 'TC', instructor: 'Mrs. Tejaswini N D' },
+                { time: '09:30-10:30', subject: 'Research Methodology', code: 'RM&IPR', instructor: 'Mrs. Alekhya Mohammadi' },
+                { time: '10:30-11:30', subject: 'Break', code: 'BREAK', instructor: '' },
+                { time: '11:30-12:30', subject: 'Computer Networks', code: 'CN', instructor: 'Mrs. Poornima B P & Mrs. Shilpa M I' },
+                { time: '12:30-01:30', subject: 'Computer Vision', code: 'CV', instructor: 'Dr. Likevai Thomas' },
+                { time: '01:30-02:30', subject: 'Lunch', code: 'LUNCH', instructor: '' },
+                { time: '02:30-03:30', subject: 'Placement', code: 'PLACE', instructor: '' },
+                { time: '03:30-04:30', subject: 'Forum Activity', code: 'FORUM', instructor: '' }
+            ],
+            Saturday: [
+                { time: '08:30-09:30', subject: 'Data Visualization Lab', code: 'DV Lab(DI/CN Lab12)', instructor: 'Mrs. Akhila C V' },
+                { time: '09:30-10:30', subject: 'Data Visualization Lab', code: 'DV Lab(DI/CN Lab12)', instructor: 'Mrs. Akhila C V' },
+                { time: '10:30-11:30', subject: 'Break', code: 'BREAK', instructor: '' },
+                { time: '11:30-12:30', subject: 'Software Engineering', code: 'SE&PM', instructor: 'Mrs. Shilpa K' },
+                { time: '12:30-01:30', subject: 'Theory of Computation', code: 'TC', instructor: 'Mrs. Tejaswini N D' },
+                { time: '01:30-02:30', subject: 'Lunch', code: 'LUNCH', instructor: '' }
+            ]
+        };
+
+        let currentDay = '';
+        let notificationsEnabled = false;
+        let deferredPrompt;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            
+            const today = new Date();
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            currentDay = days[today.getDay()];
+            
+            // Set active day
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                if (btn.dataset.day === currentDay) {
+                    btn.classList.add('active');
+                }
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentDay = this.dataset.day;
+                    displaySchedule();
+                });
+            });
+            
+            displaySchedule();
+            setupNotifications();
+            setupPWA();
+        });
+
+        function updateCurrentTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('currentTime').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        function displaySchedule() {
+            const container = document.getElementById('scheduleContainer');
+            const schedule = timetable[currentDay] || [];
+            
+            if (schedule.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">No classes scheduled for this day</div>';
+                return;
+            }
+
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+
+            container.innerHTML = schedule.map(slot => {
+                const [startTime, endTime] = slot.time.split('-');
+                const [startHour, startMin] = startTime.split(':').map(Number);
+                const [endHour, endMin] = endTime.split(':').map(Number);
+                
+                const startTimeMinutes = startHour * 60 + startMin;
+                const endTimeMinutes = endHour * 60 + endMin;
+                
+                let className = 'time-slot';
+                if (currentTime >= startTimeMinutes && currentTime <= endTimeMinutes) {
+                    className += ' current';
+                } else if (currentTime < startTimeMinutes && currentTime > startTimeMinutes - 30) {
+                    className += ' upcoming';
+                }
+
+                return `
+                    <div class="${className}">
+                        <div class="time">${slot.time}</div>
+                        <div class="subject">
+                            <div class="subject-name">${slot.subject}</div>
+                            <div class="subject-code">${slot.code} ${slot.instructor ? '- ' + slot.instructor : ''}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setupNotifications() {
+            const btn = document.getElementById('notificationBtn');
+            const status = document.getElementById('status');
+            
+            if (!('Notification' in window)) {
+                btn.textContent = 'Notifications not supported';
+                btn.disabled = true;
+                return;
+            }
+            
+            if (Notification.permission === 'granted') {
+                notificationsEnabled = true;
+                btn.textContent = '✅ Notifications Enabled';
+                btn.disabled = true;
+                scheduleNotifications();
+                status.innerHTML = '<div class="status success">Notifications are enabled! You\'ll get reminders 5 minutes before each class.</div>';
+            }
+            
+            btn.addEventListener('click', function() {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        notificationsEnabled = true;
+                        btn.textContent = '✅ Notifications Enabled';
+                        btn.disabled = true;
+                        scheduleNotifications();
+                        status.innerHTML = '<div class="status success">Great! You\'ll now receive reminders 5 minutes before each class.</div>';
+                    } else {
+                        status.innerHTML = '<div class="status error">Please enable notifications in your browser settings to receive class reminders.</div>';
+                    }
+                });
+            });
+        }
+
+        function scheduleNotifications() {
+            if (!notificationsEnabled) return;
+            
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const now = new Date();
+            
+            // Schedule for next 7 days
+            for (let i = 0; i < 7; i++) {
+                const targetDate = new Date(now);
+                targetDate.setDate(now.getDate() + i);
+                const dayName = days[targetDate.getDay()];
+                
+                const schedule = timetable[dayName] || [];
+                schedule.forEach(slot => {
+                    if (slot.code === 'BREAK' || slot.code === 'LUNCH') return;
+                    
+                    const [startTime] = slot.time.split('-');
+                    const [hour, minute] = startTime.split(':').map(Number);
+                    
+                    const notificationTime = new Date(targetDate);
+                    notificationTime.setHours(hour, minute - 5, 0, 0); // 5 minutes before
+                    
+                    const timeUntilNotification = notificationTime.getTime() - now.getTime();
+                    
+                    if (timeUntilNotification > 0) {
+                        setTimeout(() => {
+                            new Notification('📚 Class Reminder', {
+                                body: `${slot.subject} (${slot.code}) starts in 5 minutes!`,
+                                icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4Ij4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjEyMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiM0RjQ2RTUiLz4KPHR5eHQgeD0iNjQiIHk9IjY0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmZmZmZmIiBmb250LXNpemU9IjE2IiBmb250LWVmZmVjdD0iYm9sZCI+TjwvdGV4dD4KPHdvYmplY3QgeD0iMzUiIHk9IjQwIiB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIGZpbGw9IiNjMzM3IiBybT0iMiIvPgo8L3N2Zz4=',
+                                tag: slot.code,
+                                requireInteraction: true
+                            });
+                        }, timeUntilNotification);
+                    }
+                });
+            }
+        }
+
+        function setupPWA() {
+            // Handle install prompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                document.getElementById('installPrompt').style.display = 'block';
+            });
+
+            document.getElementById('installBtn').addEventListener('click', () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            document.getElementById('installPrompt').style.display = 'none';
+                        }
+                        deferredPrompt = null;
+                    });
+                }
+            });
+
+            // Register service worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('data:text/javascript;base64,Y29uc3QgQ0FDSEVfTkFNRSA9ICdwZXMtdGltZXRhYmxlLXYxJzsKY29uc3QgdXJsc1RvQ2FjaGUgPSBbJy4vJ107CnNlbGYuYWRkRXZlbnRMaXN0ZW5lcignaW5zdGFsbCcsIGV2ZW50ID0+IHsKICBldmVudC53YWl0VW50aWwoY2FjaGVzLm9wZW4oQ0FDSEVfTkFNRSkudGhlbihjYWNoZSA9PiBjYWNoZS5hZGRBbGwodXJsc1RvQ2FjaGUpKSk7Cn0pOwpzZWxmLmFkZEV2ZW50TGlzdGVuZXIoJ2ZldGNoJywgZXZlbnQgPT4gewogIGV2ZW50LnJlc3BvbmRXaXRoKAogICAgY2FjaGVzLm1hdGNoKGV2ZW50LnJlcXVlc3QpLnRoZW4ocmVzcG9uc2UgPT4gcmVzcG9uc2UgfHwgZmV0Y2goZXZlbnQucmVxdWVzdCkpCiAgKTsKfSk7');
+            }
+        }
+
+        // Update schedule every minute
+        setInterval(displaySchedule, 60000);
+    </script>
+</body>
+</html>
